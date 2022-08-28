@@ -32,6 +32,7 @@ class ViewController: UIViewController {
         let searchBar = UISearchBar()
         searchBar.searchBarStyle = .minimal
         searchBar.placeholder = "Search Movies"
+        searchBar.backgroundColor = .systemBackground
         return searchBar
     }()
     
@@ -74,9 +75,10 @@ private extension ViewController {
             tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        tableView.backgroundColor = .clear
+        tableView.backgroundColor = .systemBackground
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tableView.addGestureRecognizer(tapGestureRecognizer)
+        tableView.delegate = self
     }
     
     @objc func dismissKeyboard() {
@@ -87,9 +89,16 @@ private extension ViewController {
         // Bind the table view to the data source which provides the configured table view cell.
         let source = DataSource(tableView: tableView) { tableView, indexPath, movie in
             let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-            cell.textLabel?.text = movie.title
-            cell.textLabel?.numberOfLines = 0
-            cell.backgroundColor = .systemGroupedBackground
+            
+            var contentConfig = cell.defaultContentConfiguration()
+            contentConfig.text = movie.title
+            contentConfig.secondaryText = "2022"
+            contentConfig.textProperties.numberOfLines = 0
+            contentConfig.image = UIImage(systemName: "film")
+            contentConfig.imageProperties.tintColor = .systemTeal
+            cell.contentConfiguration = contentConfig
+            cell.contentView.backgroundColor = .systemGroupedBackground
+            
             return cell
         }
         return source
@@ -130,5 +139,17 @@ extension ViewController: UISearchBarDelegate {
         return movies.filter {
             $0.title.lowercased().contains(query.lowercased())
         }
+    }
+}
+
+extension ViewController: UITableViewDelegate {
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        var contentConfig = UIListContentConfiguration.groupedHeader()
+        contentConfig.text = "Top 2022 Movies"
+        contentConfig.textProperties.font = .preferredFont(forTextStyle: .headline)
+        
+        let contentView = UIListContentView(configuration: contentConfig)
+        return contentView
     }
 }
