@@ -9,19 +9,15 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    enum Section {
-        case movie
-    }
+    // Properties
+    private var movieSections = MovieSection.allMovieSections
+    private lazy var dataSource = makeDataSource()
     
-    struct Movie: Hashable {
-        let title: String
-    }
+    // Value Types
+    typealias DataSource = UITableViewDiffableDataSource<MovieSection, Movie>
+    typealias Snapshot = NSDiffableDataSourceSnapshot<MovieSection, Movie>
     
-    typealias DataSource = UITableViewDiffableDataSource<Section, Movie>
-    typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Movie>
-    
-    private var movies = [Movie]()
-    
+    // UI Components
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.allowsSelection = false
@@ -36,16 +32,16 @@ class ViewController: UIViewController {
         return searchBar
     }()
     
-    private lazy var dataSource = makeDataSource()
-
+    // Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
-        movies = top10Movies
         configureInterface()
-        applySnapshot(movies: movies, section: .movie)
+        applySnapshot(animatingDifferences: false)
     }
 
 }
+
+// MARK: - Private Methods
 
 private extension ViewController {
     
@@ -87,7 +83,7 @@ private extension ViewController {
     
     func makeDataSource() -> DataSource {
         // Bind the table view to the data source which provides the configured table view cell.
-        let source = DataSource(tableView: tableView) { tableView, indexPath, movie in
+        let datasource = DataSource(tableView: tableView) { tableView, indexPath, movie in
             let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
             
             var contentConfig = cell.defaultContentConfiguration()
@@ -101,44 +97,45 @@ private extension ViewController {
             
             return cell
         }
-        return source
+        
+        return datasource
     }
     
-    func applySnapshot(movies: [Movie], section: Section, animatingDiff: Bool = true) {
+    func applySnapshot(animatingDifferences: Bool = true) {
         var snapshot = Snapshot()
-        snapshot.appendSections([section])
-        snapshot.appendItems(movies, toSection: section)
-        dataSource.apply(snapshot, animatingDifferences: animatingDiff)
-    }
-    
-    var top10Movies: [Movie] {
-        [
-            Movie(title: "Top Gun: Maverick"),
-            Movie(title: "Jurassic World Dominion"),
-            Movie(title: "Doctor Strange in the Multiverse of Madness"),
-            Movie(title: "Minions: The Rise of Gru"),
-            Movie(title: "The Batman"),
-            Movie(title: "Thor: Love and Thunder"),
-            Movie(title: "The Battle at Lake Changjin II"),
-            Movie(title: "Moon Man"),
-            Movie(title: "Fantastic Beasts: The Secrets of Dumbledore"),
-            Movie(title: "Sonic the Hedgehog 2")
-        ]
+        snapshot.appendSections(movieSections)
+        movieSections.forEach { section in
+            snapshot.appendItems(section.movies, toSection: section)
+        }
+        dataSource.apply(snapshot, animatingDifferences: animatingDifferences)
     }
 }
 
 extension ViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        movies = filteredMovies(for: searchBar.text)
-        applySnapshot(movies: movies, section: .movie)
+        self.movieSections = filteredMovieSections(for: searchBar.text)
+        applySnapshot()
     }
     
-    private func filteredMovies(for query: String?) -> [Movie] {
-        let movies = top10Movies
-        guard let query = query, !query.isEmpty else { return movies }
-        return movies.filter {
-            $0.title.lowercased().contains(query.lowercased())
+    private func filteredMovieSections(for query: String?) -> [MovieSection] {
+        let sections = MovieSection.allMovieSections
+        guard
+            let query = query,
+            !query.isEmpty
+        else {
+            return sections
         }
+        
+        var filteredSections = [MovieSection]()
+        sections.forEach { section in
+            let matchedMovies = section.movies.filter { movie in
+                movie.title.lowercased().contains(query.lowercased())
+            }
+            if !matchedMovies.isEmpty {
+                filteredSections.append(MovieSection(title: section.title, movies: matchedMovies))
+            }
+        }
+        return filteredSections
     }
 }
 
@@ -146,10 +143,18 @@ extension ViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         var contentConfig = UIListContentConfiguration.groupedHeader()
-        contentConfig.text = "Top 2022 Movies"
+        contentConfig.text = self.movieSections[section].title
         contentConfig.textProperties.font = .preferredFont(forTextStyle: .headline)
-        
+
         let contentView = UIListContentView(configuration: contentConfig)
         return contentView
     }
+    
+
+//    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+//        if scrollView.contentOffset.y >= scrollView.contentSize.height - scrollView.frame.height {
+//            movies.append(contentsOf: top10Movies)
+//            applySnapshot(movies: movies, section: .top10)
+//        }
+//    }
 }
