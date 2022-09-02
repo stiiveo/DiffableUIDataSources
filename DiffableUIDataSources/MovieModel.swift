@@ -20,7 +20,7 @@ struct Movie: Hashable {
 }
     
 extension MovieSection {
-    static var allMovieSections: [MovieSection] = [
+    static let allMovieSections: [MovieSection] = [
         MovieSection(title: "2022 Top 10", movies: [
             Movie(title: "Top Gun: Maverick", releaseYear: 2022),
             Movie(title: "Jurassic World Dominion", releaseYear: 2022),

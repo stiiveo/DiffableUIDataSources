@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  TableViewController.swift
 //  DiffableUIDataSources
 //
 //  Created by Jason Ou on 2022/8/28.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class ViewController: UIViewController {
+final class TableViewController: UIViewController {
     
     // Properties
     private var movieSections = MovieSection.allMovieSections
@@ -43,7 +43,7 @@ final class ViewController: UIViewController {
 
 // MARK: - Private Methods
 
-private extension ViewController {
+private extension TableViewController {
     
     func configureInterface() {
         configureSearchBar()
@@ -91,9 +91,7 @@ private extension ViewController {
             contentConfig.secondaryText = String(movie.releaseYear)
             contentConfig.textProperties.numberOfLines = 0
             contentConfig.image = UIImage(systemName: "film")
-            contentConfig.imageProperties.tintColor = .systemTeal
             cell.contentConfiguration = contentConfig
-            cell.contentView.backgroundColor = .systemGroupedBackground
             
             return cell
         }
@@ -111,7 +109,7 @@ private extension ViewController {
     }
 }
 
-extension ViewController: UISearchBarDelegate {
+extension TableViewController: UISearchBarDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         self.movieSections = filteredMovieSections(for: searchBar.text)
@@ -148,7 +146,7 @@ extension ViewController: UISearchBarDelegate {
     }
 }
 
-extension ViewController: UITableViewDelegate {
+extension TableViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         var contentConfig = UIListContentConfiguration.groupedHeader()
@@ -158,12 +156,15 @@ extension ViewController: UITableViewDelegate {
         let contentView = UIListContentView(configuration: contentConfig)
         return contentView
     }
-    
+}
 
-//    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-//        if scrollView.contentOffset.y >= scrollView.contentSize.height - scrollView.frame.height {
-//            movies.append(contentsOf: top10Movies)
-//            applySnapshot(movies: movies, section: .top10)
-//        }
-//    }
+private extension String {
+    
+    func matches(_ comparedString: String, isCaseSensitive: Bool = true) -> Bool {
+        if isCaseSensitive {
+            return self.contains(comparedString)
+        } else {
+            return self.lowercased().contains(comparedString.lowercased())
+        }
+    }
 }
