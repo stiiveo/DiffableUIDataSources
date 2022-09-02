@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+final class ViewController: UIViewController {
     
     // Properties
     private var movieSections = MovieSection.allMovieSections
@@ -88,7 +88,7 @@ private extension ViewController {
             
             var contentConfig = cell.defaultContentConfiguration()
             contentConfig.text = movie.title
-            contentConfig.secondaryText = "2022"
+            contentConfig.secondaryText = String(movie.releaseYear)
             contentConfig.textProperties.numberOfLines = 0
             contentConfig.image = UIImage(systemName: "film")
             contentConfig.imageProperties.tintColor = .systemTeal
@@ -112,6 +112,7 @@ private extension ViewController {
 }
 
 extension ViewController: UISearchBarDelegate {
+    
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         self.movieSections = filteredMovieSections(for: searchBar.text)
         applySnapshot()
@@ -127,14 +128,22 @@ extension ViewController: UISearchBarDelegate {
         }
         
         var filteredSections = [MovieSection]()
-        sections.forEach { section in
-            let matchedMovies = section.movies.filter { movie in
+        
+        for section in sections {
+            if section.title.lowercased().contains(query.lowercased()) {
+                filteredSections.append(section)
+                continue
+            }
+            
+            var movieFilteredSection = section
+            movieFilteredSection.movies = movieFilteredSection.movies.filter { movie in
                 movie.title.lowercased().contains(query.lowercased())
             }
-            if !matchedMovies.isEmpty {
-                filteredSections.append(MovieSection(title: section.title, movies: matchedMovies))
+            if !movieFilteredSection.movies.isEmpty {
+                filteredSections.append(movieFilteredSection)
             }
         }
+        
         return filteredSections
     }
 }
